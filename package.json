@@ -1,0 +1,16 @@
+{
+  "name": "yuque2hexo",
+  "version": "1.0.0",
+  "description": "语雀文档转换成 hexo 文档工具",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "guoyong",
+  "license": "ISC",
+  "dependencies": {
+    "@yuque/sdk": "^1.1.1",
+    "axios": "^0.19.0",
+    "yargs": "^15.0.2"
+  }
+}
