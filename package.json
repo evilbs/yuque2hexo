@@ -1,16 +1,34 @@
 {
   "name": "yuque2hexo",
-  "version": "1.0.0",
+  "version": "1.1.4",
   "description": "语雀文档转换成 hexo 文档工具",
   "main": "index.js",
+  "bin": {
+    "y2h": "bin/index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint src",
+    "lint:create": "eslint --init",
+    "lint:fix": "eslint --fix --fix-type suggestion --fix-type problem ."
   },
   "author": "guoyong",
   "license": "ISC",
+  "keywords": [
+    "yuque",
+    "语雀",
+    "hexo",
+    "语雀转 hexo"
+  ],
   "dependencies": {
     "@yuque/sdk": "^1.1.1",
     "axios": "^0.19.0",
+    "colors": "^1.4.0",
     "yargs": "^15.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-react": "^7.16.0"
   }
 }

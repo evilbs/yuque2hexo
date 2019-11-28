@@ -1,20 +1,20 @@
 const SDK = require('@yuque/sdk');
 
-let _client = undefined;
-function _initSDK() {
-  const client = new SDK({
-    token: 'AA5rdr4NLXP3oY7hahAVKES6Kk4BW5ZGpmTTqFjr'
+let client;
+function initSDK(token) {
+  const yuqueClient = new SDK({
+    token,
   });
 
-  _client = client;
+  client = yuqueClient;
 }
 
-function main() {
-  if (!_client) {
-    _initSDK();
+function main(token) {
+  if (!client) {
+    initSDK(token);
   }
 
-  return _client;
+  return client;
 }
 
 module.exports = main;

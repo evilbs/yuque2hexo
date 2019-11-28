@@ -1,34 +1,39 @@
-const getYuqueClient = require('./yuque');
-const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
-const url = require("url");
-
-// todo: 为什么在正则里面要加两个斜杆？
-const imageMDReg = new RegExp("!\\[(.+)\\]\\((.+)\\)", "g");
-const hexoPostDir = '/Users/evilbs/work/blog/source/_posts'
+const fs = require('fs');
+const { downloadImages } = require('./utils');
+const getYuqueClient = require('./yuque');
 
 /**
  * 将 yuque 文档转换成 hexo 文档
- * @param {yuque 文档信息} yuqueDoc 
- * @param {hexo posts 文件夹} hexoDir 
- * @param {转换设置参数} options 
+ * @param {yuque token} yuqueToken
+ * @param {yuque 文档信息} yuqueDoc
+ * @param {hexo posts 文件夹} hexoDir
+ * @param {转换设置参数} options
  */
-async function translateYuqueToHexo(yuqueDoc,
-  hexoDir = hexoPostDir,
-  options = {
-    isSavedPicture: true,
-    isForce: true
-  }) {
-  let result = {
+async function translateYuqueToHexo(yuqueToken, yuqueDoc, hexoDir,
+  options = { isSavedPicture: true, isForce: true }) {
+  const result = {
     isSuccess: false,
-    msg: ''
+    msg: '',
   };
 
-  let client = getYuqueClient();
-  let doc = await client.docs.get(yuqueDoc);
-  let docPath = path.join(hexoDir, `${doc.slug}.md`);
-  let docAssetPath = path.join(hexoDir, `${doc.slug}/`);
+  const client = getYuqueClient(yuqueToken);
+  let doc;
+  try {
+    doc = await client.docs.get(yuqueDoc);
+  } catch (e) {
+    let msg = '语雀文章获取失败，';
+    if (e.status === 401) {
+      msg += '请查检「语雀」token 是否配置正确.';
+    } else {
+      msg = (e.message === 'Not Found' ? '文章不存在.' : '请检查是否为网络原因.');
+    }
+    result.msg = msg;
+    return result;
+  }
+
+  const docPath = path.join(hexoDir, `${doc.slug}.md`);
+  const docAssetPath = path.join(hexoDir, `${doc.slug}/`);
   let docContent;
 
   if (!options.isForce && fs.existsSync(docPath)) {
@@ -47,10 +52,11 @@ async function translateYuqueToHexo(yuqueDoc,
       fs.mkdirSync(docAssetPath);
     }
 
-    // 把远程图片下载到本地  
-    let isDownloadedFiles = await downloadImages(docContent, docAssetPath);
-    if (!isDownloadedFiles) {
-      result.msg = '文章中的图片下载失败!';
+    // 把远程图片下载到本地
+    try {
+      docContent = await downloadImages(docContent, docAssetPath);
+    } catch (e) {
+      result.msg = `文章中的图片下载失败，${e.message}`;
       return result;
     }
   }
@@ -62,59 +68,12 @@ title: ${doc.title}
 date: ${doc.created_at}
 tags:
 ---
-  ` + docContent;
+${docContent}`;
 
   fs.writeFileSync(docPath, docContent, { encoding: 'utf-8' });
-
   result.isSuccess = true;
   return result;
 }
 
-/**
- * 下载所有 yuque 文档中的图片
- * @param {yuque 文档内容} docContent 
- * @param {文件存放地址} docAssetPath 
- */
-async function downloadImages(docContent, docAssetPath) {
-  let files = [];
-  docContent = docContent.replace(imageMDReg, (match, imageAlt, imageSrc, offset, str) => {
-    let urlParsed = url.parse(imageSrc);
-    let fileName = path.basename(urlParsed.pathname);
-    let filePath = path.join(docAssetPath, fileName);
-    files.push({
-      imageSrc,
-      filePath,
-      fileName
-    });
-
-    return `![${imageAlt}](${fileName})`;
-  });
-
-  for (var file of files) {
-    await downloadImage(file.imageSrc, file.filePath);
-  }
-
-  return true;
-}
-
-/**
- * 将远程图片下载到本地
- * @param {图片 url} url 
- * @param {图片存放地址} imagePath 
- */
-function downloadImage(url, imagePath) {
-  return axios({
-    url,
-    responseType: 'stream',
-  }).then(
-    response =>
-      new Promise((resolve, reject) => {
-        response.data
-          .pipe(fs.createWriteStream(imagePath))
-          .on('finish', () => resolve())
-          .on('error', e => reject(e));
-      }),
-  );
-}
 
 module.exports = translateYuqueToHexo;
