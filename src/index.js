@@ -27,6 +27,7 @@ async function translateYuqueToHexo(yuqueToken, yuqueDoc, hexoDir,
       msg += '请查检「语雀」token 是否配置正确.';
     } else {
       msg = (e.message === 'Not Found' ? '文章不存在.' : '请检查是否为网络原因.');
+      msg += '' + e.message;
     }
     result.msg = msg;
     return result;
