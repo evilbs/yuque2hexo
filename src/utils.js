@@ -3,7 +3,7 @@ const path = require('path');
 const axios = require('axios');
 const URL = require('url');
 
-const IMAGEMDREG = /!\[(.+)\]\((.+)\)/g;
+const IMAGEMDREG = /!\[(.+?)\]\((.+?)\)/g;
 
 /**
  * 将远程图片下载到本地
